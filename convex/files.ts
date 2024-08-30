@@ -20,7 +20,7 @@ export const createFile = mutation({
             throw new ConvexError("must be logged in to manage files");
         }
 
-        const isAuthorized = hasAccessToOrg(ctx, identity.tokenIdentifier, args.orgId)
+        const isAuthorized = await hasAccessToOrg(ctx, identity.tokenIdentifier, args.orgId)
 
         if (!isAuthorized) {
             throw new ConvexError("your are not authorized to access this organization.")
@@ -41,6 +41,11 @@ export const getFiles = query({
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
             return []
+        }
+
+        const isAuthorized = await hasAccessToOrg(ctx, identity.tokenIdentifier, args.orgId)
+        if (!isAuthorized) {
+            return [];
         }
 
         return !!identity ? await ctx.db
