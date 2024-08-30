@@ -11,7 +11,8 @@ export const hasAccessToOrg = async (ctx: QueryCtx | MutationCtx, tokenIdentifie
 export const createFile = mutation({
     args: {
         name: v.string(),
-        orgId: v.string()
+        fileId: v.id("_storage"),
+        orgId: v.string(),
     },
     async handler(ctx, args) {
         const identity = await ctx.auth.getUserIdentity();
@@ -28,6 +29,7 @@ export const createFile = mutation({
 
         await ctx.db.insert("files", {
             name: args.name,
+            fileId: args.fileId,
             orgId: args.orgId,
         });
     }
@@ -53,4 +55,8 @@ export const getFiles = query({
             .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
              .collect() : [];
     }
-})
+});
+
+export const generateUploadUrl = mutation(async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+});

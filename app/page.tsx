@@ -25,12 +25,17 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input";
 import {uploadFileSchema} from "@/lib/validation";
+import {useState} from "react";
+import Image from "next/image";
 
 
 export default function Home() {
     const createFile = useMutation(api.files.createFile);
     const organization = useOrganization();
     const user = useUser();
+    const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+    const [isFileDialogOpen, setIsOpenFileDialog] = useState(false);
+    const [isFileSubmitting, setIsFileSubmitting] = useState(false);
 
     // allows personal accounts to manage files without belonging to an organization
     // by having user.id as the organization id
@@ -53,15 +58,31 @@ export default function Home() {
     const fileRef = form.register("file");
 
     // 2. Define a submit handler.
-    function onSubmit(values: z.infer<typeof uploadFileSchema>) {
-        console.log(values)
+    async function onSubmit(values: z.infer<typeof uploadFileSchema>) {
+        console.log(values);
+        setIsFileSubmitting(true);
+        const postUrl = await generateUploadUrl();
+        const result = await fetch(postUrl, {
+            method: "POST",
+            headers: {"Content-Type": values.file[0]!.type},
+            body: values.file[0],
+        });
+        const { storageId } = await result.json();
+
+        // save new storage id to database
+        await createFile({ name: values.name, fileId: storageId, orgId: orgId });
+
+        // reset form
+        form.reset();
+        setIsFileSubmitting(false)
+        setIsOpenFileDialog(false);
     }
   return (
     <main className="container mx-auto mt-12">
         <div className="flex flex-row justify-between items-center">
             <h1 className="text-4xl font-bold">Your Files</h1>
             <div>
-                <Dialog>
+                <Dialog open={isFileDialogOpen} onOpenChange={setIsOpenFileDialog}>
                     <DialogTrigger asChild>
                         <Button className="bg-blue-950" onClick={() => {
 
@@ -100,13 +121,14 @@ export default function Home() {
                                                     <Input
                                                         type="file"
                                                         {...fileRef}
+                                                        // onChange={(event) => setSelectedImage(event.target.files![0])}
                                                     />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
                                         )}
                                     />
-                                    <Button type="submit">Submit</Button>
+                                    <Button type="submit" disabled={isFileSubmitting}>{isFileSubmitting ? "...Uploading" : "Submit"}</Button>
                                     </form>
                             </Form>
                         </div>
