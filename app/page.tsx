@@ -1,31 +1,38 @@
 "use client";
 
-import {Button} from "@/components/ui/button";
-import {SignedIn, SignedOut, SignInButton, SignOutButton} from "@clerk/nextjs";
 import {useMutation, useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
+import {Button} from "@/components/ui/button";
+import {useOrganization, useUser} from "@clerk/nextjs";
 
 export default function Home() {
     const createFile = useMutation(api.files.createFile);
-    const files = useQuery(api.files.getFiles);
+    const organization = useOrganization();
+    const user = useUser();
+
+    // allows personal accounts to manage files without belonging to an organization
+    // by having user.id as the organization id
+    let orgId : string | undefined = undefined;
+    if(organization.isLoaded && user.isLoaded) {
+        orgId = organization.organization?.id ?? user.user?.id;
+    }
+
+    const files = useQuery(api.files.getFiles, orgId ? {orgId} : "skip");
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        <SignedIn>
-            <SignOutButton>
-                <Button>Sign Out</Button>
-            </SignOutButton>
-        </SignedIn>
+    <main className="flex">
         {files?.map((file) => (<p key={file._id}>{file.name}</p>))}
-        <div className="bg-gray-300">
-            <Button className="bg-amber-400" onClick={() => createFile({name: "New File 2"})}>Add File</Button>
+        <div>
+            <Button className="bg-amber-400" onClick={() => {
+                if(!organization) return;
+                createFile({
+                    name: "New File 2",
+                    orgId: orgId,
+                })
+            }}
+            >
+                Add File
+            </Button>
         </div>
-        <SignedOut>
-            <SignInButton mode="modal">
-                <Button>
-                    Sign In
-                </Button>
-            </SignInButton>
-        </SignedOut>
     </main>
   );
 }
