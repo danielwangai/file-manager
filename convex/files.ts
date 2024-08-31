@@ -57,6 +57,33 @@ export const getFiles = query({
     }
 });
 
+export const deleteFile = mutation({
+    args: {
+        fileId: v.id("files"),
+    },
+    async handler(ctx, args) {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            throw new ConvexError("must be authenticated to perform this action.");
+        }
+
+        // TODO: must be creator or admin to delete
+        // find file
+        const file = await ctx.db.get(args.fileId);
+        if (!file) {
+            throw new ConvexError("file does not exist")
+        }
+
+        const isAuthorized = await hasAccessToOrg(ctx, identity.tokenIdentifier, file.orgId)
+        if (!isAuthorized) {
+            throw new ConvexError("must be part of the organization or owner of personal account to delete.");
+        }
+
+        // delete file
+        await ctx.db.delete(args.fileId);
+    }
+})
+
 export const generateUploadUrl = mutation(async (ctx) => {
     return await ctx.storage.generateUploadUrl();
 });

@@ -5,6 +5,7 @@ import {api} from "@/convex/_generated/api";
 import {useOrganization, useUser} from "@clerk/nextjs";
 import {Toaster} from "@/components/ui/toaster";
 import UploadFile from "@/app/upload-file";
+import {FileCard} from "@/app/file-card";
 
 
 export default function Home() {
@@ -22,11 +23,13 @@ export default function Home() {
 
   return (
     <main className="container mx-auto mt-12">
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center mb-4">
             <h1 className="text-4xl font-bold">Your Files</h1>
             <UploadFile orgId={orgId} />
         </div>
-        {files?.map((file) => (<p key={file._id}>{file.name}</p>))}
+        <div className="grid grid-cols-4 gap-2">
+            {files?.map((file) => <FileCard key={file._id} file={file} />)}
+        </div>
         <Toaster />
     </main>
 );
