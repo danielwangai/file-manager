@@ -26,7 +26,9 @@ import {
 import { Input } from "@/components/ui/input";
 import {uploadFileSchema} from "@/lib/validation";
 import {useState} from "react";
-import Image from "next/image";
+import {Toaster} from "@/components/ui/toaster";
+import {useToast} from "@/components/ui/use-toast";
+import {Loader2} from "lucide-react";
 
 
 export default function Home() {
@@ -34,6 +36,7 @@ export default function Home() {
     const organization = useOrganization();
     const user = useUser();
     const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+    const { toast } = useToast();
     const [isFileDialogOpen, setIsOpenFileDialog] = useState(false);
     const [isFileSubmitting, setIsFileSubmitting] = useState(false);
 
@@ -76,6 +79,13 @@ export default function Home() {
         form.reset();
         setIsFileSubmitting(false)
         setIsOpenFileDialog(false);
+
+        // alert user that file was uploaded successfully
+        toast({
+            title: "File uploaded successfully",
+            variant: "success",
+            description: "Your file is now visible to members of your organization",
+        })
     }
   return (
     <main className="container mx-auto mt-12">
@@ -128,7 +138,10 @@ export default function Home() {
                                             </FormItem>
                                         )}
                                     />
-                                    <Button type="submit" disabled={isFileSubmitting}>{isFileSubmitting ? "...Uploading" : "Submit"}</Button>
+                                    <Button type="submit" disabled={isFileSubmitting} className="flex gap-1">
+                                        {isFileSubmitting && (<Loader2 className="h-4 w-4 mr-1 animate-spin"/>)}
+                                        {isFileSubmitting ? "Uploading" : "Submit"}
+                                    </Button>
                                     </form>
                             </Form>
                         </div>
@@ -138,6 +151,7 @@ export default function Home() {
             </div>
         </div>
         {files?.map((file) => (<p key={file._id}>{file.name}</p>))}
+        <Toaster />
     </main>
 );
 }
