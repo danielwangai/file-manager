@@ -27,6 +27,7 @@ import {uploadFileSchema} from "@/lib/validation";
 import {useState} from "react";
 import {useToast} from "@/components/ui/use-toast";
 import {Loader2} from "lucide-react";
+import {Doc} from "@/convex/_generated/dataModel";
 
 interface UploadFileProps {
     orgId: string | undefined
@@ -60,10 +61,16 @@ export default function UploadFile({orgId}: {orgId: string | undefined}) {
             headers: {"Content-Type": values.file[0]!.type},
             body: values.file[0],
         });
-        const { storageId } = await result.json();
+        const fileTypeMap = {
+            "application/pdf": "pdf",
+            "application/csv": "csv",
+            "image/png": "image",
+            "image/jpeg": "image",
+        } as Record<string, Doc<"files">["type"]>;
+        const {storageId} = await result.json();
 
         // save new storage id to database
-        await createFile({ name: values.name, fileId: storageId, orgId });
+        await createFile({ name: values.name, fileId: storageId, orgId, type: fileTypeMap[values.file[0].type]});
 
         // reset form
         form.reset();

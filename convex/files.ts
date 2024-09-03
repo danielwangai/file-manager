@@ -1,6 +1,8 @@
-import {mutation, MutationCtx, query, QueryCtx} from "./_generated/server";
+import {ActionCtx, mutation, MutationCtx, query, QueryCtx} from "./_generated/server";
 import {ConvexError, v} from "convex/values";
 import {getUser} from "./users";
+import {fileTypes} from "./schema";
+import {Id} from "./_generated/dataModel";
 
 export const hasAccessToOrg = async (ctx: QueryCtx | MutationCtx, tokenIdentifier: string, orgId: string) => {
     const user = await getUser(ctx, tokenIdentifier);
@@ -13,6 +15,8 @@ export const createFile = mutation({
         name: v.string(),
         fileId: v.id("_storage"),
         orgId: v.string(),
+        type: fileTypes,
+        // uploadedBy: v.id("users"),
     },
     async handler(ctx, args) {
         const identity = await ctx.auth.getUserIdentity();
@@ -31,6 +35,8 @@ export const createFile = mutation({
             name: args.name,
             fileId: args.fileId,
             orgId: args.orgId,
+            type: args.type,
+            fileUrl: await ctx.storage.getUrl(args.fileId) ?? "",
         });
     }
 });
@@ -42,7 +48,7 @@ export const getFiles = query({
     async handler(ctx, args) {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) {
-            return []
+            return [];
         }
 
         const isAuthorized = await hasAccessToOrg(ctx, identity.tokenIdentifier, args.orgId)
@@ -50,10 +56,10 @@ export const getFiles = query({
             return [];
         }
 
-        return !!identity ? await ctx.db
+        return await ctx.db
             .query("files")
             .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
-             .collect() : [];
+            .collect();
     }
 });
 

@@ -7,7 +7,6 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
     Card,
@@ -26,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import {Doc} from "@/convex/_generated/dataModel";
-import {MoreVertical, TrashIcon} from "lucide-react";
+import {FileIcon, GanttChartIcon, ImageIcon, MoreVertical, TrashIcon} from "lucide-react";
 import {useState} from "react";
 import {useMutation} from "convex/react";
 import {api} from "@/convex/_generated/api";
@@ -71,7 +70,7 @@ const FileCardActions = ({file}: {file: Doc<"files">}) => {
             <DropdownMenu>
                 <DropdownMenuTrigger><MoreVertical className="w-4 h-6"/></DropdownMenuTrigger>
                 <DropdownMenuContent>
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                         className="flex gap-1 text-red-600 items-center cursor-pointer"
@@ -90,13 +89,19 @@ export const FileCard = ({file}: {file: Doc<"files">}) => {
     return(
         <Card>
             <CardHeader className="relative">
-                <CardTitle>{file.name}</CardTitle>
+                <CardTitle className="flex flex-row">
+                    <ImageIcon className="mr-2" />
+                    {file.name}
+                </CardTitle>
                 <div className="absolute top-0.5 right-1">
                     <FileCardActions file={file} />
                 </div>
             </CardHeader>
             <CardContent>
-                <p>Card Content</p>
+                {file.type === "image" && <img width={300} height={300} src={file.fileUrl} alt={file.name}/>}
+                {file.type === "csv" && <GanttChartIcon />}
+                {file.type === "pdf" && <FileIcon width={150} height={150} />}
+
             </CardContent>
             <CardFooter>
                 <p>Card Footer</p>
