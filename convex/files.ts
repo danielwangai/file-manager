@@ -20,6 +20,7 @@ export const createFile = mutation({
     },
     async handler(ctx, args) {
         const identity = await ctx.auth.getUserIdentity();
+        console.log("IDENTITY: ", identity)
 
         if (!identity) {
             throw new ConvexError("must be logged in to manage files");
@@ -37,6 +38,7 @@ export const createFile = mutation({
             orgId: args.orgId,
             type: args.type,
             fileUrl: await ctx.storage.getUrl(args.fileId) ?? "",
+            uploadedBy: identity.tokenIdentifier,
         });
     }
 });

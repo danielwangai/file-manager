@@ -30,6 +30,7 @@ import {useState} from "react";
 import {useMutation} from "convex/react";
 import {api} from "@/convex/_generated/api";
 import {useToast} from "@/components/ui/use-toast";
+import {Button} from "@/components/ui/button";
 
 const FileCardActions = ({file}: {file: Doc<"files">}) => {
     const { toast } = useToast();
@@ -103,8 +104,12 @@ export const FileCard = ({file}: {file: Doc<"files">}) => {
                 {file.type === "pdf" && <FileIcon width={150} height={150} />}
 
             </CardContent>
-            <CardFooter>
-                <p>Card Footer</p>
+            <CardFooter className="flex justify-center">
+                <Button onClick={() => {
+                    window.open(file.fileUrl, "_blank");
+                }}>
+                    Download
+                </Button>
             </CardFooter>
         </Card>
     )

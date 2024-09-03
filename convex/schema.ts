@@ -14,7 +14,7 @@ export default defineSchema({
         fileId: v.id("_storage"),
         type: fileTypes,
         fileUrl: v.string(),
-        // uploadedBy: v.id("users"),
+        uploadedBy: v.string(),// tokenIdentifier from users table
     })
     .index(
         "by_orgId",
