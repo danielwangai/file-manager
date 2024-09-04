@@ -15,6 +15,9 @@ export default defineSchema({
         type: fileTypes,
         fileUrl: v.string(),
         uploadedBy: v.string(),// tokenIdentifier from users table
+    }).searchIndex("search_query", {
+        searchField: "name",
+        filterFields: ["orgId"/*, "_creationTime", "type"*/]
     })
     .index(
         "by_orgId",

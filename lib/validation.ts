@@ -8,3 +8,7 @@ export const uploadFileSchema = z.object({
         .custom<FileList>((val) => val instanceof FileList, "Required")
         .refine((files) => files.length > 0, `Required`),
 });
+
+export const searchSchema = z.object({
+    query: z.string().min(0),
+});

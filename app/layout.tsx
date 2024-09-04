@@ -5,6 +5,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import {ConvexClientProvider} from "@/app/ConvexClientProvider";
 import {Header} from "@/app/header";
+import Sidebar from "@/app/sidebar";
+import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,11 +23,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ConvexClientProvider>
-          <Header />
-          {children}
-        </ConvexClientProvider>
+      <ConvexClientProvider>
+        <Header/>
+        <main className="container mx-auto mt-12">
+          <div className="flex gap-8">
+            <Sidebar />
+            <div className="w-full">
+              {children}
+            </div>
+          </div>
+        </main>
+      </ConvexClientProvider>
       </body>
     </html>
-  );
+);
 }
