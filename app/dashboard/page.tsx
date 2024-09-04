@@ -38,6 +38,8 @@ const FilesPage = () => {
         orgId = organization.organization?.id ?? user.user?.id;
     }
 
+    // user.user.
+
     const files = useQuery(api.files.getFiles, orgId ? {orgId, query} : "skip");
 
     const isLoading = files === undefined;

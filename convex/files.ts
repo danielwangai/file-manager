@@ -2,13 +2,61 @@ import {ActionCtx, mutation, MutationCtx, query, QueryCtx} from "./_generated/se
 import {ConvexError, v} from "convex/values";
 import {getUser} from "./users";
 import {fileTypes} from "./schema";
-import {Id} from "./_generated/dataModel";
 
 export const hasAccessToOrg = async (ctx: QueryCtx | MutationCtx, tokenIdentifier: string, orgId: string) => {
     const user = await getUser(ctx, tokenIdentifier);
     return user.orgIds.includes(orgId)
         || user.tokenIdentifier.includes(orgId); // for files created on personal accounts
 }
+
+export const addToFavorites = mutation({
+    args: {
+        fileId: v.id("files"),
+        orgId: v.string(),
+    },
+    async handler(ctx, args) {
+        // each file added as favorite is a unique list of the user
+        // get identity
+        const identity = await ctx.auth.getUserIdentity();
+
+        if (!identity) {
+            throw new ConvexError("must be logged in to manage files");
+        }
+        // must belong to organization to favorite a file
+        const isAuthorized = await hasAccessToOrg(ctx, identity.tokenIdentifier, args.orgId)
+
+        if (!isAuthorized) {
+            // TODO: delete file from favorites list
+            throw new ConvexError("your are not authorized to access this organization.")
+        }
+
+        const user = await ctx.db.query("users")
+            .withIndex("by_tokenIdentifier", q => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .first()
+
+        if (!user) {
+            throw new ConvexError("must be logged in to manage files");
+        }
+
+        // cannot mark file as favorite more than once
+        const favorite = await ctx.db.query("fileFavorites")
+            .filter(
+                (q) => q.and(
+                    q.eq(q.field("fileId"), args.fileId),
+                    q.eq(q.field("userId"), user._id))
+            )
+            .first()
+        if(favorite) {
+            throw new ConvexError("file already marked as favorite");
+        }
+
+        await ctx.db.insert("fileFavorites", {
+            userId: user._id,
+            fileId: args.fileId,
+            orgId: args.orgId,
+        })
+    }
+})
 
 export const createFile = mutation({
     args: {
@@ -20,7 +68,6 @@ export const createFile = mutation({
     },
     async handler(ctx, args) {
         const identity = await ctx.auth.getUserIdentity();
-        console.log("IDENTITY: ", identity)
 
         if (!identity) {
             throw new ConvexError("must be logged in to manage files");
@@ -107,3 +154,5 @@ export const deleteFile = mutation({
 export const generateUploadUrl = mutation(async (ctx) => {
     return await ctx.storage.generateUploadUrl();
 });
+
+

@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import {Doc} from "@/convex/_generated/dataModel";
-import {FileIcon, GanttChartIcon, ImageIcon, MoreVertical, TrashIcon} from "lucide-react";
+import {FileIcon, GanttChartIcon, ImageIcon, MoreVertical, StarIcon, TrashIcon} from "lucide-react";
 import {useState} from "react";
 import {useMutation} from "convex/react";
 import {api} from "@/convex/_generated/api";
@@ -36,6 +36,9 @@ const FileCardActions = ({file}: {file: Doc<"files">}) => {
     const { toast } = useToast();
     const deleteFile = useMutation(api.files.deleteFile);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+    const addToFavorites = useMutation(api.files.addToFavorites);
+
     return (
         <>
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -79,6 +82,28 @@ const FileCardActions = ({file}: {file: Doc<"files">}) => {
                     >
                         <TrashIcon className="w-4 h-4"/>
                         Delete
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        className="flex gap-1 text-red-600 items-center cursor-pointer"
+                        onClick={async () => {
+                            try{
+                                await addToFavorites({fileId: file._id, orgId: file.orgId})
+                                toast({
+                                    variant: "default",
+                                    title: "File added to favorites",
+                                    description: `The file ${file.name} was added to your favorites list`
+                                });
+                            } catch (e) {
+                                toast({
+                                    variant: "destructive",
+                                    title: "Add to favorites failed",
+                                    description: "something went wrong while marking file as favorite. Try again later."
+                                })
+                            }
+                        }}
+                    >
+                        <StarIcon className="w-4 h-4"/>
+                        Favorite
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
