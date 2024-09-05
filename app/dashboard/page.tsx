@@ -11,7 +11,7 @@ import {useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
 import Image from "next/image";
 
-function Placeholder({orgId}: {orgId: string}) {
+export function Placeholder({orgId}: {orgId: string}) {
     return (
         <div className="flex flex-col gap-8 w-full items-center mt-24">
             <Image
@@ -40,7 +40,7 @@ const FilesPage = () => {
 
     // user.user.
 
-    const files = useQuery(api.files.getFiles, orgId ? {orgId, query} : "skip");
+    const files = useQuery(api.files.getFiles, orgId ? {orgId, query, favorites: false} : "skip");
 
     const isLoading = files === undefined;
     return (

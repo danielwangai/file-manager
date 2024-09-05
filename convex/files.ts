@@ -94,6 +94,7 @@ export const getFiles = query({
     args: {
         orgId: v.string(),
         query: v.optional(v.string()),
+        favorites: v.optional(v.boolean()),
     },
     async handler(ctx, args) {
         const identity = await ctx.auth.getUserIdentity();
@@ -106,21 +107,42 @@ export const getFiles = query({
             return [];
         }
 
-        const files = ctx.db
-            .query("files")
-            // .withSearchIndex("search_query", (q) => q.search("name", args.query ? args.query : "").eq("orgId", args.orgId))
-            // .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
-            // .collect();
+        const user = await ctx.db.query("users")
+            .withIndex("by_tokenIdentifier", q => q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .first()
 
-        if (!args.query) {
+        if (!user) {
+            throw new ConvexError("must be logged in to manage files");
+        }
+
+        // base query to build on depending on args
+        const files = ctx.db
+            .query("files");
+
+        // only records matching query
+        if (args.query) {
             return files
-                .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
+                .withSearchIndex("search_query", (q) => q.search("name", args.query ? args.query : "").eq("orgId", args.orgId))
                 .collect()
         }
 
+        // only user favorites
+        if(args.favorites) {
+            const favorites = await ctx.db.query("fileFavorites")
+                .withIndex("by_userId_orgId_fileId", q => q.eq("userId", user._id)
+                    .eq("orgId", args.orgId))
+                .collect();
+            const allFiles = files.withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
+                .collect();
+            return allFiles.then(
+                (results) => results.filter((file) =>
+                    favorites.some((favorite) => favorite.fileId === file._id)));
+        }
+
+        // get all files, no query or favorite args
         return files
-            .withSearchIndex("search_query", (q) => q.search("name", args.query ? args.query : "").eq("orgId", args.orgId))
-            .collect()
+            .withIndex("by_orgId", (q) => q.eq("orgId", args.orgId))
+            .collect();
     }
 });
 
