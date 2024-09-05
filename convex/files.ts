@@ -9,7 +9,7 @@ export const hasAccessToOrg = async (ctx: QueryCtx | MutationCtx, tokenIdentifie
         || user.tokenIdentifier.includes(orgId); // for files created on personal accounts
 }
 
-export const addToFavorites = mutation({
+export const toggleFavorite = mutation({
     args: {
         fileId: v.id("files"),
         orgId: v.string(),
@@ -38,23 +38,22 @@ export const addToFavorites = mutation({
             throw new ConvexError("must be logged in to manage files");
         }
 
-        // cannot mark file as favorite more than once
-        const favorite = await ctx.db.query("fileFavorites")
-            .filter(
-                (q) => q.and(
-                    q.eq(q.field("fileId"), args.fileId),
-                    q.eq(q.field("userId"), user._id))
-            )
-            .first()
-        if(favorite) {
-            throw new ConvexError("file already marked as favorite");
+        const favorite = await ctx.db
+                .query("fileFavorites")
+                .withIndex("by_userId_orgId_fileId", q => q.eq("userId", user._id)
+                    .eq("orgId", args.orgId))
+                .first()
+        if(!favorite) {
+            await ctx.db.insert("fileFavorites", {
+                userId: user._id,
+                fileId: args.fileId,
+                orgId: args.orgId,
+            })
+            return
         }
 
-        await ctx.db.insert("fileFavorites", {
-            userId: user._id,
-            fileId: args.fileId,
-            orgId: args.orgId,
-        })
+        // delete from favorites
+        await ctx.db.delete(favorite._id);
     }
 })
 

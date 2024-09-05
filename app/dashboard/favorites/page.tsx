@@ -6,7 +6,6 @@ import {useOrganization, useUser} from "@clerk/nextjs";
 import {FileCard} from "@/app/dashboard/file-card";
 import React from "react";
 import {Loader2} from "lucide-react";
-import {SearchBar} from "@/app/dashboard/search-bar";
 import UploadFile from "@/app/dashboard/upload-file";
 import {Toaster} from "@/components/ui/toaster";
 import {Placeholder} from "@/app/dashboard/page";

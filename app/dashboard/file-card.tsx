@@ -37,7 +37,7 @@ const FileCardActions = ({file}: {file: Doc<"files">}) => {
     const deleteFile = useMutation(api.files.deleteFile);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-    const addToFavorites = useMutation(api.files.addToFavorites);
+    const toggleFavorite = useMutation(api.files.toggleFavorite);
 
     return (
         <>
@@ -87,7 +87,7 @@ const FileCardActions = ({file}: {file: Doc<"files">}) => {
                         className="flex gap-1 text-red-600 items-center cursor-pointer"
                         onClick={async () => {
                             try{
-                                await addToFavorites({fileId: file._id, orgId: file.orgId})
+                                await toggleFavorite({fileId: file._id, orgId: file.orgId})
                                 toast({
                                     variant: "default",
                                     title: "File added to favorites",
